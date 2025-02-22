@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crop Prediction</title>
+</head>
+<body>
+    <h1>Crop Prediction System</h1>
+    <form action="/predict" method="post">
+        <label for="TEMPERATURE">Temperature:</label><br>
+        <input type="text" id="TEMPERATURE" name="TEMPERATURE"><br>
+        <label for="HUMIDITY">Humidity:</label><br>
+        <input type="text" id="HUMIDITY" name="HUMIDITY"><br>
+        <label for="pH">pH:</label><br>
+        <input type="text" id="pH" name="pH"><br>
+        <label for="RAINFALL">Rainfall:</label><br>
+        <input type="text" id="RAINFALL" name="RAINFALL"><br>
+        <label for="STATE">State:</label><br>
+        <input type="text" id="STATE" name="STATE"><br>
+        <label for="CROP_PRICE">Crop Price:</label><br>
+        <input type="text" id="CROP_PRICE" name="CROP_PRICE"><br><br>
+        <button type="submit">Predict</button>
+    </form>
+</body>
+</html>
