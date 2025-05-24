@@ -1,129 +1,125 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const Analytics = () => {
   const [formData, setFormData] = useState({
-    Region: '',
-    Soil_Type: '',
-    Crop: '',
-    Temperature_Celsius: '',
-    Weather_Condition: '',
-    Days_to_Harvest: '',
+    Region: "",
+    Soil_Type: "",
+    Crop: "",
+    Rainfall_mm: "",
+    Temperature_Celsius: "",
+    Fertilizer_Used: false,
+    Irrigation_Used: false,
+    Weather_Condition: "",
+    Days_to_Harvest: "",
   });
 
   const [analyticsResult, setAnalyticsResult] = useState(null);
-  const [errors, setErrors] = useState({});
-
-  const validate = () => {
-    const newErrors = {};
-
-    Object.keys(formData).forEach((field) => {
-      const value = formData[field].trim();
-
-      if (!value) {
-        newErrors[field] = 'This field is required';
-      } else {
-        // Validate text fields (only letters and spaces, with length limit)
-        if (['Region', 'Soil_Type', 'Crop', 'Weather_Condition'].includes(field)) {
-          if (!/^[a-zA-Z\s]+$/.test(value)) {
-            newErrors[field] = 'Only letters and spaces are allowed';
-          }
-          if (value.length > 50) {
-            newErrors[field] = 'Maximum 50 characters allowed';
-          }
-        }
-
-        // Validate numeric fields
-        if (['Temperature_Celsius', 'Days_to_Harvest'].includes(field)) {
-          if (!/^\d+(\.\d+)?$/.test(value)) {
-            newErrors[field] = 'Only numeric values are allowed';
-          } else {
-            const numValue = parseFloat(value);
-
-            if (numValue < 0) newErrors[field] = 'Value must be non-negative';
-
-            if (field === 'Temperature_Celsius' && (numValue < -50 || numValue > 60)) {
-              newErrors[field] = 'Temperature must be between -50 and 60°C';
-            }
-            if (field === 'Days_to_Harvest' && (numValue < 1 || numValue > 365)) {
-              newErrors[field] = 'Days to Harvest must be between 1 and 365';
-            }
-          }
-        }
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
-
+    setLoading(true);
+    setAnalyticsResult(null);
     try {
-      const response = await fetch('http://localhost:5000/analytics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("http://localhost:5000/analytics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch analytics");
+      }
+
       const result = await response.json();
       setAnalyticsResult(result);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      console.error("Error fetching analytics:", error);
+      setAnalyticsResult({ error: "Failed to fetch analytics data" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="app-container">
-      <h1 className="title">Crop Analytics System</h1>
-      <form className="form-container" onSubmit={handleSubmit}>
-        {[
-          { id: 'Region', label: 'Region' },
-          { id: 'Soil_Type', label: 'Soil Type' },
-          { id: 'Crop', label: 'Crop' },
-          { id: 'Temperature_Celsius', label: 'Temperature (°C)', type: 'number' },
-          { id: 'Weather_Condition', label: 'Weather Condition' },
-          { id: 'Days_to_Harvest', label: 'Days to Harvest', type: 'number' },
-        ].map(({ id, label, type = 'text' }) => (
-          <div key={id} className="form-group">
-            <label htmlFor={id} className="form-label">
-              {label}
-            </label>
-            <input
-              type={type}
-              id={id}
-              name={id}
-              value={formData[id]}
-              onChange={handleChange}
-              className={`form-input ${errors[id] ? 'error' : ''}`}
-            />
-            {errors[id] && <small className="error-message">{errors[id]}</small>}
-          </div>
-        ))}
-        <button type="submit" className="submit-button">
-          Analyze
-        </button>
-      </form>
+    <div style={styles.pageContainer}>
+      <div style={styles.overlay}>
+        <h1 style={styles.title}>Crop Yield Prediction</h1>
+        <form onSubmit={handleSubmit}>
+          <table style={styles.table}>
+            <tbody>
+              {Object.entries(formData).map(([field, value]) => (
+                <tr key={field}>
+                  <td style={styles.tableCell}>
+                    <label htmlFor={field}>{field.replace(/_/g, " ")}</label>
+                  </td>
+                  <td style={styles.tableCell}>
+                    {typeof value === "boolean" ? (
+                      <input
+                        type="checkbox"
+                        id={field}
+                        name={field}
+                        checked={value}
+                        onChange={handleChange}
+                        style={styles.checkbox}
+                      />
+                    ) : (
+                      <input
+                        type={/Rainfall_mm|Temperature_Celsius|Days_to_Harvest/.test(field) ? "number" : "text"}
+                        id={field}
+                        name={field}
+                        value={value}
+                        onChange={handleChange}
+                        style={styles.input}
+                      />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button type="submit" style={styles.submitButton} disabled={loading}>
+            {loading ? "Analyzing..." : "Analyze"}
+          </button>
+        </form>
 
-      {analyticsResult && (
-        <div className="result-container">
-          <h2 className="result-title">Analytics Results</h2>
-          <div className="result-details">
-            <p><strong>Insights:</strong> {analyticsResult.insights}</p>
-            <p><strong>Recommendations:</strong> {analyticsResult.recommendations}</p>
-            <p><strong>Statistics:</strong> {analyticsResult.statistics}</p>
+        {analyticsResult && (
+          <div style={styles.resultContainer}>
+            <h2 style={styles.resultTitle}>Prediction Result</h2>
+            {analyticsResult.error ? (
+              <p style={styles.errorMessage}>{analyticsResult.error}</p>
+            ) : (
+              <p>
+                <strong>Predicted Crop Yield:</strong> {analyticsResult.prediction.toFixed(2)} tons/hectare
+              </p>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
+};
+
+const styles = {
+  pageContainer: { display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f4f4f4" },
+  overlay: { padding: "20px", background: "white", borderRadius: "10px", boxShadow: "0 0 10px rgba(0,0,0,0.1)" },
+  title: { textAlign: "center", marginBottom: "20px" },
+  table: { width: "100%", borderCollapse: "collapse" },
+  tableCell: { padding: "10px", borderBottom: "1px solid #ddd" },
+  input: { width: "100%", padding: "8px", border: "1px solid #ccc", borderRadius: "5px" },
+  checkbox: { height: "20px", width: "20px" },
+  submitButton: { width: "100%", padding: "10px", marginTop: "10px", backgroundColor: "#007bff", color: "white", border: "none", cursor: "pointer", borderRadius: "5px" },
+  resultContainer: { marginTop: "10px", padding: "10px", background: "#f1f1f1", borderRadius: "5px", textAlign: "center" },
+  resultTitle: { fontSize: "18px", fontWeight: "bold" },
+  errorMessage: { color: "red" },
 };
 
 export default Analytics;

@@ -27,7 +27,7 @@ const App = () => {
         <>
           <Sidebar onNavigation={setView} />
           <div className="main-content">
-            {view === 'home' && <h1>Welcome to the Crop Suggestion System</h1>}
+            {view === 'home' && <h1 style={{ color: 'white' }}>Welcome to the Crop Suggestion System</h1>}
             {view === 'prediction' && <Prediction />}
             {view === 'analytics' && <Analytics />}
             {view === 'disease' && <Disease/>}

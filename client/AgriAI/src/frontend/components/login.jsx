@@ -4,6 +4,26 @@ const LoginPage = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
 
+  const validateInput = () => {
+    const { username, password } = formData;
+    const usernameRegex = /^[a-zA-Z0-9]+$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+
+    if (!username || !password) {
+      return "Username and Password are required.";
+    }
+    if (username.length < 4) {
+      return "Username must be at least 4 characters long.";
+    }
+    if (!usernameRegex.test(username)) {
+      return "Username can only contain letters and numbers.";
+    }
+    if (!passwordRegex.test(password)) {
+      return "Password must be at least 6 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.";
+    }
+    return "";
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -11,11 +31,12 @@ const LoginPage = ({ onLoginSuccess }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.username === "" || formData.password === "") {
-      setError("Username and Password are required.");
+    const validationError = validateInput();
+    if (validationError) {
+      setError(validationError);
     } else {
       setError("");
-      onLoginSuccess(formData.username); // Pass the username to App
+      onLoginSuccess(formData.username);
     }
   };
 
@@ -140,19 +161,6 @@ const LoginPage = ({ onLoginSuccess }) => {
               style={styles.logo}
             />
             Sign in with Google
-          </a>
-          <a
-            href="https://www.linkedin.com/login"
-            style={styles.socialButton}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png"
-              alt="LinkedIn Logo"
-              style={styles.logo}
-            />
-            Sign in with LinkedIn
           </a>
         </div>
       </form>
